@@ -1,5 +1,6 @@
-# 05-ho-random-predict.R: script to predict presence/absence and biomass at 
+# 02-ho-random-predict.R: script to predict presence/absence and biomass at 
 #                         hold-out locations used in the analysis. 
+# Author: Jeffrey W. Doser
 rm(list = ls())
 library(spOccupancy)
 library(spAbundance)
@@ -67,18 +68,23 @@ X.0.list[[6]] <- X.0
 # Do the prediction -------------------------------------------------------
 # Do the prediction for all models, one by one.
 rmspe.ests <- rep(NA, n.models)
+cor.ests <- rep(NA, n.models)
 for (l in 1:n.models) {
   print(paste0("Currently on model ", l, " out of ", n.models))
   load(paste0(out.dir, models[l]))
   n.samples <- out$n.post * out$n.chains
   rmspe.vals <- rep(NA, n.samples)
+  cor.vals <- rep(NA, n.samples)
   out.pred <- predict(out, X.0.list[[l]], coords.0, verbose = FALSE, ignore.RE = FALSE) 
   for (j in 1:n.samples) {
     rmspe.vals[j] <- sqrt(mean((data.hold$y - out.pred$y.0.samples[j, , 1])^2))
+    cor.vals[j] <- cor(data.hold$y, out.pred$y.0.samples[j, , 1])
   }
   rmspe.ests[l] <- mean(rmspe.vals)
+  cor.ests[l] <- mean(cor.vals)
 }
 rmspe.ests
+cor.ests
 
 # Save results to hard drive ----------------------------------------------
-save(rmspe.ests, file = 'results/ba-ho-random-rmspe.rda')
+save(rmspe.ests, cor.ests, file = 'results/ba-ho-random-rmspe.rda')

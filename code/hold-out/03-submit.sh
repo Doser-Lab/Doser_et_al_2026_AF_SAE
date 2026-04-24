@@ -1,11 +1,11 @@
 #!/bin/bash
 #
-# Script:  05a-submit.sh
+# Script:  03-submit.sh
 # Usage: Quick script to submit multiple jobs to NCSU HPC. 
 # Author: Jeffrey W. Doser (adapted from NCSU HPC)
 #
 ## To run, type:
-#     ./05a-submit.sh 
+#     ./03-submit.sh 
 #  Script must have execute permissions, i.e.,
 #     chmod u+x 05a-submit.sh
 

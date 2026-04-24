@@ -1,5 +1,5 @@
-# 6-summary.R: script to summarize analysis results and generate all figures
-#              shown in the manuscript.
+# 05-summary.R: script to summarize analysis results and generate all figures
+#               shown in the manuscript.
 # Author: Jeffrey W. Doser
 rm(list = ls())
 library(spAbundance)
@@ -205,4 +205,14 @@ beta.df %>%
         axis.text.y = element_text(size = 12))
 ggsave(file = 'figures/Figure_S20.png', units = 'in', device = 'png',
        height = 4, width = 7)
+
+# Model predictive performance --------------------------------------------
+load("results/ba-ho-random-rmspe.rda")
+cor.ests
+rmspe.ests
+
+# Also load full model fit to get correlations in the observed data
+load('results/ba-univ-spatial-noRE-1e+05-samples-2026-01-13.rda')
+y.hat <- apply(out$y.rep.samples, 2, mean)
+cor(y.hat, out$y)
 

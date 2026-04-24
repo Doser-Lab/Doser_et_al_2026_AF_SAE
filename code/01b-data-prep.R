@@ -1,5 +1,6 @@
-# 01-data-prep.R: script to format the data into the necessary formats for 
-#                 fitting the SAE models with spOccupancy and spAbundance.
+# 01b-data-prep.R: script to format the data into the necessary formats for 
+#                  fitting the SAE models with spOccupancy and spAbundance.
+# Author: Jeffrey W. Doser
 rm(list = ls())
 library(tidyverse)
 library(sf)
@@ -42,9 +43,6 @@ coords.sf.utm <- coords.sf.lat.long %>%
   st_transform(crs = 32642)
 coords <- coords.sf.utm %>%
   st_coordinates()
-
-# coords.sf.lat.long$Province <- site.dat$Province
-# plot(coords.sf.lat.long, pch = 19)
 
 covs <- site.dat %>%
   mutate(Province_num = as.numeric(factor(Province)), 
@@ -98,8 +96,6 @@ afghan.prec <- worldclim_country(country = 'Afghanistan', var = 'prec',
                                  path = '~/Dropbox/data/worldclim', res = 0.5)
 afghan.wind <- worldclim_country(country = 'Afghanistan', var = 'wind', 
                                  path = '~/Dropbox/data/worldclim', res = 0.5)
-# afghan.vapr <- worldclim_country(country = 'Afghanistan', var = 'vapr', 
-#                                  path = '~/Dropbox/data/worldclim', res = 0.5)
 # Convert coordinates to worldclim crs
 coords.sf.wc <- coords.sf.utm %>%
   st_transform(crs = st_crs(afghan.tmin))
@@ -135,7 +131,6 @@ data.list.2 <- list(y = y,
                     covs = covs.list, 
                     coords = coords, 
                     z = ifelse(y > 0, 1, y))
-# Reorder the species to help with factor model convergence
 # Reformat species ordering to add in mixing and convergence --------------
 # Using 4 factors
 sp.names <- dimnames(data.list.2$y)[[1]]
@@ -174,7 +169,7 @@ for (i in 1:length(sp.names)) {
 # the center of the distribution is fairly close to 0, and thus there will be a
 # non-negligible chunk of the probability distribution that goes below 0. This 
 # can be problematic, since the fourth-root is not a one-to-one function. Thus, 
-# we will use the log-transformation, despite it resulting in a bit of an extreme
+# we will use the log-transformation, despite it resulting in somewhat of a 
 # negative skew. 
 
 # Remove rare species -----------------------------------------------------

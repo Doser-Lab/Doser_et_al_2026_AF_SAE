@@ -1,6 +1,6 @@
-# 6a-convergence-gof-assessment.R: script to do some basic exploration of model fit
-#                                  results, including convergence assessment and residual
-#                                  diagnostics. 
+# 03-convergence-model-comp.R: script to assess model convergence and determine 
+#                              which model performs the best relative to
+#                              all other models. 
 # Author: Jeffrey W. Doser
 rm(list = ls())
 library(spOccupancy)
@@ -58,8 +58,6 @@ print(cor(data.list$y, y.rep.quants[2, ]))
 waicAbund(out.ns.only)
 waicAbund(out.ns)
 waicAbund(out.ns.re)
-# TODO: this needs to be fixed in spAbundance, particularly before any new update 
-#       is rolled out. Currently, just manipulating this myself. 
 out.sp.only$like.samples <- array(c(out.sp.only$like.samples), dim = c(dim(out.sp.only$like.samples), 1))
 waicAbund(out.sp.only)
 out.sp$like.samples <- array(out.sp$like.samples, dim = c(dim(out.sp$like.samples), 1))
@@ -68,5 +66,4 @@ out.sp.re$like.samples <- array(out.sp.re$like.samples, dim = c(dim(out.sp.re$li
 waicAbund(out.sp.re)
 
 # RMSE (random hold out) --------------
-# TODO: need to update for working with BA. 
 apply(rmspe.ests, 2, mean)

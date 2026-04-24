@@ -1,6 +1,6 @@
-# 1d-get-random-holdout-data.R: script to split up the data into a hold out data set 
-#                               for model prediction. Here the plots that are held out
-#                               are a random sample of 25% of the plot locations in the 
+# 01b-get-random-holdout-data.R: script to split up the data into a hold out data set 
+#                                for model prediction. Here the plots that are held out
+#                                are a random sample of 25% of the plot locations in the 
 #                               data set. 
 # Author: Jeffrey W. Doser
 rm(list = ls())

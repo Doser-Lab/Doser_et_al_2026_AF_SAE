@@ -1,11 +1,16 @@
-# 2e-main-spatial-only-stage-1.R: script to fit Stage 1 of the multivariate
-#                                 SAE model with spatial random effects
-#                                 and with unstructured province level effects, 
-#                                 without including any of the covariate data. 
+# 01e-ho-random-main-spatial-only-stage-1.R: script to fit Stage 1 of the multivariate
+#                                            SAE model with spatial random effects
+#                                            and with unstructured province level effects, 
+#                                            without including any of the covariate data
+#                                            for cross-validation.
+# Author: Jeffrey W. Doser
 rm(list = ls())
 library(spOccupancy)
 
 # Directories -------------------------------------------------------------
+# NOTE: this is used to determine the directories for reading in and writing out
+#       data. You should set out.dir and data.dir depending on where you are
+#       running this code.
 # Determine what machine you're on and change directories as needed.
 machine.name <- Sys.info()['nodename']
 if (machine.name == 'pop-os') {

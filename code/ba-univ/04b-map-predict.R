@@ -1,10 +1,9 @@
-# 04-predict.R: script to generate small area estimates across
-#               provinces in Eastern Afghanistan 
+# 04b-map-predict.R: script to generate predictions of basal area 
+#                    across eastern Afghanistan for use in generating 
+#                    maps. 
 # Author: Jeffrey W. Doser
 rm(list = ls())
 library(spOccupancy)
-# NOTE: this is the local version of spAbundance to accommodate a dimensions 
-#       problem. 
 library(spAbundance)
 library(sf)
 library(stars)
@@ -36,7 +35,6 @@ forest.mean <- mean(data.list$covs$forest)
 forest.sd <- sd(data.list$covs$forest)
 
 # Load resulting model objects --------------------------------------------
-# TODO: may need to change this depending on what the top model suggests. 
 load(paste0(out.dir, 'ba-univ-spatial-noRE-1e+05-samples-2026-01-13.rda'))
 # Load land use data to only predict at forest sites. 
 landuse.dat <- read_stars('data/land-use-data/data/LANDCOVER_2018.tif')
@@ -51,10 +49,6 @@ ppt.pred <- (pred.covs.df$ppt - ppt.mean) / ppt.sd
 elev.pred <- (pred.covs.df$elev - Elevation.mean) / Elevation.sd
 X.0 <- cbind(1, elev.pred, elev.pred^2, ppt.pred, ppt.pred^2)
 dimnames(X.0)[[2]] <- c(dimnames(out$X)[[2]])
-# TODO: switch back if need be. 
-# X.0 <- cbind(1, elev.pred, elev.pred^2, ppt.pred, ppt.pred^2, 
-#                      pred.covs.df$Province_num)
-# dimnames(X.0)[[2]] <- c(dimnames(out$X)[[2]], dimnames(out$X.re)[[2]])
 vals <- split(1:n.0, ceiling(seq_along(1:n.0) / 500))
 # Stage 1 ---------------------------
 for (l in 1:length(vals)) {

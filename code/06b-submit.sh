@@ -1,3 +1,5 @@
+# 06b-submit.sh: bash script to submit the prediction R script to the NCSU HPC. 
+# Author: Jeffrey W. Doser
 #!/bin/bash
 #BSUB -n 5
 #BSUB -W 7200

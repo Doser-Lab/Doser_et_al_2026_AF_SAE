@@ -1,10 +1,8 @@
-# 04-predict.R: script to generate small area estimates across
-#               provinces in Eastern Afghanistan 
+# 04a-sae-predict.R: script to generate small area estimates across
+#                    provinces in Eastern Afghanistan 
 # Author: Jeffrey W. Doser
 rm(list = ls())
 library(spOccupancy)
-# NOTE: this is the local version of spAbundance to accommodate a dimensions 
-#       problem. 
 library(spAbundance)
 
 # Directories -------------------------------------------------------------
@@ -34,7 +32,6 @@ forest.mean <- mean(data.list$covs$forest)
 forest.sd <- sd(data.list$covs$forest)
 
 # Load resulting model objects --------------------------------------------
-# TODO: may need to change this depending on what the top model suggests. 
 load(paste0(out.dir, 'ba-univ-spatial-noRE-1e+05-samples-2026-01-13.rda'))
 
 pred.files <- list.files(paste0(data.dir, "pred_pieces"))
@@ -54,10 +51,6 @@ for (j in 1:n.districts) {
   n.0 <- nrow(pred.covs.df)
   ppt.pred <- (pred.covs.df$ppt - ppt.mean) / ppt.sd
   elev.pred <- (pred.covs.df$elev - Elevation.mean) / Elevation.sd
-  # TODO: switch back if using the full model
-  # X.0 <- cbind(1, elev.pred, elev.pred^2, ppt.pred, ppt.pred^2, 
-  #                      pred.covs.df$Province_num)
-  # dimnames(X.0)[[2]] <- c(dimnames(out$X)[[2]], dimnames(out$X.re)[[2]])
   X.0 <- cbind(1, elev.pred, elev.pred^2, ppt.pred, ppt.pred^2)
   dimnames(X.0)[[2]] <- c(dimnames(out$X)[[2]])
   vals <- split(1:n.0, ceiling(seq_along(1:n.0) / 100))
