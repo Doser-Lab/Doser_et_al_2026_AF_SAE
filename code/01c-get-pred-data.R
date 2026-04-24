@@ -1,5 +1,6 @@
-# 1c-get-pred-data.R: extract data for a prediction grid across the 
-#                     study region for use in prediction and map generation.
+# 01c-get-pred-data.R: extract data for a prediction grid across the 
+#                      study region for use in prediction.
+# Author: Jeffrey W. Doser
 rm(list = ls())
 library(tidyverse)
 library(sf)

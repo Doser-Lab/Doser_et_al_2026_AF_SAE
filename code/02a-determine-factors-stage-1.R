@@ -2,6 +2,7 @@
 #                                  Stage 1 model to determine how many spatial 
 #                                  factors are needed to accurately represent
 #                                  the species distributions across the area.
+# Author: Jeffrey W. Doser
 rm(list = ls())
 library(spOccupancy)
 

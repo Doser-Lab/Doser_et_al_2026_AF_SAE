@@ -1,3 +1,7 @@
 data/
-results/
+results/ho-random-stage-*
+results/stage-*
+results/top_model_prediction_results_2000m.rda
 documents/
+.Rproj.user
+figures/nasir_figs/

@@ -1,5 +1,6 @@
 # 01a-data-prep.R: script to format the data into the formats necessary 
-#                  for estimating basal area. 
+#                  for estimating basal area.
+# Author: Jeffrey W. Doser
 rm(list = ls())
 library(tidyverse)
 library(sf)
@@ -81,7 +82,6 @@ landuse.dat <- read_stars('data/land-use-data/data/LANDCOVER_2018.tif')
 # Rangeland = 11
 # Sand cover = 12
 # Streams = 13
-# 1000 m radius. NOTE: need to think about this a bit more. 
 coords.sf.buff <- coords.sf.utm %>%
   st_buffer(dist = 1000)
 percent.for <- function(a) {
@@ -129,8 +129,6 @@ afghan.prec <- worldclim_country(country = 'Afghanistan', var = 'prec',
                                  path = '~/Dropbox/data/worldclim', res = 0.5)
 afghan.wind <- worldclim_country(country = 'Afghanistan', var = 'wind', 
                                  path = '~/Dropbox/data/worldclim', res = 0.5)
-# afghan.vapr <- worldclim_country(country = 'Afghanistan', var = 'vapr', 
-#                                  path = '~/Dropbox/data/worldclim', res = 0.5)
 # Convert coordinates to worldclim crs
 coords.sf.wc <- coords.sf.utm %>%
   st_transform(crs = st_crs(afghan.tmin))

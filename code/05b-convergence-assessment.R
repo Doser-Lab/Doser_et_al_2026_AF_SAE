@@ -49,7 +49,6 @@ summary(out.sp.re.1)
 
 
 # Stage 2 Convergence Assessment ------------------------------------------
-# TODO: all spatial models might need a bit more, but they are generally quite good.
 # Non-spatial null --------------------
 # ALL CONVERGED
 load('results/stage-2-nonspatial-only-2e+05-samples-4-factors-2026-01-09.rda')
@@ -79,7 +78,6 @@ out.sp.re.2 <- out
 summary(out.sp.re.2)
 
 # Stage 2 Model Assessment ------------------------------------------------
-# TODO: change the model you're using here as needed
 top.2 <- out.sp.re.2
 y.rep.quants <- apply(top.2$y.rep.samples, c(2, 3), quantile, c(0.025, 0.5, 0.975))
 

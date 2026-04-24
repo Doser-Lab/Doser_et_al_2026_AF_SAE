@@ -1,4 +1,4 @@
-# 6-summary.R: script to summarize analysis results and generate all figures
+# 07-summary.R: script to summarize analysis results and generate all figures
 #              shown in the manuscript.
 # Author: Jeffrey W. Doser
 rm(list = ls())
@@ -87,7 +87,7 @@ ggsave(file = 'figures/Figure_S2.png', height = 6, width = 8, units = 'in')
 location.plot <- ggplot(coords.sf) +
   geom_sf(data = af.district, fill = 'cornsilk', color = 'grey', lwd = 0.4) +
   geom_sf(data = af.prov.model, fill = NA, color = 'black', lwd = 0.4, alpha = 0) +
-  geom_sf(size = 1, col = 'black') +
+  geom_sf(size = 1.5, fill = 'black', pch = 21) +
   theme_bw(base_size = 18) +
   labs(x = 'Longitude', y = 'Latitude', title = '(a)') +
   theme(legend.position = 'inside',
@@ -157,7 +157,6 @@ plot.df <- plot.df %>%
                                       numeric.val == 13 ~ 'Streams', 
                                       TRUE ~ 'Other'))
 
-# TODO: need to make better colors for this. 
 my.cols <- c('black', '#D55E00', '#009E73', '#E69F00', '#F0E442', 
              '#CC79A7', '#56B4E9', '#0072B2')
 plot.df <- st_as_stars(plot.df, dims = c('x', 'y'))
@@ -183,9 +182,90 @@ fig.1 <- location.plot + inset_element(inset.plot, 0.54, 0, 0.95, .45, align_to 
 ggsave(fig.1, file = 'figures/Figure_1.png', device = 'png', units = 'in', 
        height = 8, width = 12)
 
-# EDA plot of basal area distributions by species -------------------------
-# TODO: left off here, just make some EDA plots. 
-# plot.df <- data.frame(ba = 
+# Model predictive performance --------------------------------------------
+# Model order: Nonspatial only, nonspatial noRE, nonspatial, 
+#              spatial only, spatial noRE, full spatial
+load('results/ho-random-auc-rmspe.rda')
+rownames(auc.ests) <- sp.names
+rownames(rmspe.ests) <- sp.names
+rownames(cor.ests) <- sp.names
+# Note that AUC estimates are pretty solid across species, with the exception 
+# of Abies spectabilis, whose value is only at 0.62. This is not particularly 
+# suprising as this is the rarest species included in the data set. 
+apply(auc.ests, 2, mean)
+auc.ests
+apply(rmspe.ests, 2, mean)
+# Correlation coefficients between basal area for the different species are 
+# quite low. As with the AUC values, correlation coefficients are particularly low for Abies 
+# spectabilis (the rarest species), as well as Juniperus semiglobosa. 
+apply(cor.ests, 2, mean)
+cor.ests
+
+# For context, this is the number of plots for each species where there is non-zero
+# basal area. In other words, it's the number of plots used for that species
+# to generate estimates for the stage 2 model. This makes clear that for some of the 
+# rare species there are simply very little plots to get a reasonable estimate of 
+# basal area. 
+apply(data.list.2$y, 1, function(a) sum(a != 0))
+
+# Because of the low correlation coefficients in the model predictions, we will not 
+# report results for Abies spectabilis, Juniperus semiglobosa, or Pinus wallichiana. 
+bad.sp <- which(cor.ests[, 6] < 0.35)
+
+# Model assessment --------------------------------------------------------
+# NOTE: change the model you're using here as needed
+load("results/stage-2-spatial-2e+05-samples-4-factors-2026-01-09.rda")
+y.rep.quants <- apply(out$y.rep.samples, c(2, 3), quantile, c(0.025, 0.5, 0.975))
+N <- length(sp.names)
+
+par(mfrow = c(1, 2))
+for (i in 1:N) {
+  keep.indx <- which(data.list.2$y[i, ] != 0)
+  max.val <- max(c(data.list.2$y[i, keep.indx],
+                   y.rep.quants[2, i, keep.indx]))
+  min.val <- min(c(data.list.2$y[i, keep.indx],
+                   y.rep.quants[2, i, keep.indx]))
+  plot(data.list.2$y[i, keep.indx], y.rep.quants[2, i, keep.indx], pch = 19,
+       xlab = 'True', ylab = 'Fitted', main = sp.names[i],
+       ylim = c(min.val, max.val), xlim = c(min.val, max.val))
+  abline(0, 1)
+  hist(data.list.2$y[i, keep.indx], main = sp.names[i])
+  hist(y.rep.quants[2, i, keep.indx], add = TRUE, col = 'red')
+  print(sp.names[i])
+  print(cor(data.list.2$y[i, keep.indx], y.rep.quants[2, i, keep.indx]))
+  Sys.sleep(1)
+}
+
+# Residual assessment
+resids.2 <- data.list.2$y - y.rep.quants[2, , ]
+par(mfrow = c(1, 3))
+for (i in 1:N) {
+  keep.indx <- which(data.list.2$y[i, ] != 0)
+  plot(y.rep.quants[2, i, keep.indx], resids.2[i, keep.indx], pch = 19,
+       xlab = 'Fitted', ylab = 'Residuals', main = sp.names[i])
+  abline(h = 0, lty = 2, col = 'grey')
+  hist(resids.2[i, keep.indx], main = sp.names[i])
+  qqnorm(resids.2[i, keep.indx], main = sp.names[i])
+  qqline(resids.2[i, keep.indx], main = sp.names[i])
+  Sys.sleep(2)
+}
+par(mfrow = c(1, 1))
+
+# Calculate correlation coefficient for the full model 
+cor.ests.fit <- rep(NA, N)
+load("results/stage-2-spatial-2e+05-samples-4-factors-2026-01-09.rda")
+y.rep.quants <- apply(out$y.rep.samples, c(2, 3), quantile, c(0.025, 0.5, 0.975))
+for (i in 1:N) {
+  keep.indx <- which(data.list.2$y[i, ] != 0)
+  cor.ests.fit[i] <- cor(data.list.2$y[i, keep.indx], y.rep.quants[2, i, keep.indx])
+}
+
+
+# Notably, and in contrast to the model predictions, there are strong correlations 
+# between the model fitted values and the observed data values. This together suggests
+# there are very fine-scale drivers of basal area, and the fine-scaled nature of these
+# variables makes it challenging to use spatial random effects to improve predictions
+# at non-observed locations. 
 
 # Plotting the SAEs -------------------------------------------------------
 # Determine number of prediction cells in each SAE
@@ -226,7 +306,7 @@ for (i in 1:N) {
     filter(species == sp.names[i]) %>% 
     mutate(n.cells = n.pred.district)
   plot.sf <- inner_join(af.district, plot.df, by = join_by(NAME_2 == district))
-  # TODO: don't map estimates for districts with only a small number of forested locations.
+  # NOTE: don't map estimates for districts with only a small number of forested locations.
   #       Could change the proportion you use if you want. 
   plot.sf <- plot.sf %>%
     filter(prop.forest.dist >= .03)
@@ -272,7 +352,7 @@ for (i in 1:N) {
     filter(species == sp.names[i]) %>% 
     mutate(n.cells = n.pred.district)
   plot.sf <- inner_join(af.district, plot.df, by = join_by(NAME_2 == district))
-  # TODO: don't map estimates for districts with only a small number of forested locations.
+  # NOTE: don't map estimates for districts with only a small number of forested locations.
   #       Could change the proportion you use if you want. 
   plot.sf <- plot.sf %>%
     filter(prop.forest.dist >= .03)
@@ -293,11 +373,11 @@ for (i in 1:N) {
           legend.background = element_rect(fill = NA))
 }
 # NOTE: order of the plots below is hardcoded based on the order of species. 
-order(sp.names)
-full.plot <- (mean.plots[[2]] | mean.plots[[1]] | mean.plots[[3]] | mean.plots[[5]]) / 
-             (mean.plots[[4]] | mean.plots[[6]] | mean.plots[[7]] | mean.plots[[8]])
+order(sp.names[-bad.sp])
+full.plot <- (mean.plots[[1]] | mean.plots[[3]] | mean.plots[[2]]) / 
+             (mean.plots[[4]] | mean.plots[[5]])
 ggsave(plot = full.plot, file = 'figures/Figure_4.png', 
-       height = 7, width = 10, units = 'in'  )
+       height = 7, width = 8, units = 'in'  )
 
 
 # Look at the sum of species-specific estimates, just as a comparison. 
@@ -322,7 +402,7 @@ ggplot() +
 
 # Species distribution maps -----------------------------------------------
 # Load prediction results
-# TODO: change the resoultion as needed. Note that this is just for making maps, 
+# NOTE: change the resoultion as needed. Note that this is just for making maps, 
 #       the SAE prediction is done separately at a higher resolution.
 curr.res <- 1000
 load("results/top_model_prediction_1000m.rda")
@@ -473,16 +553,6 @@ ggsave(plot = full.psi.plot, file = 'figures/Figure_3.png',
        height = 7, width = 10, units = 'in')
 
 
-# Model predictive performance --------------------------------------------
-# Model order: Nonspatial only, nonspatial noRE, nonspatial, 
-#              spatial only, spatial noRE, full spatial
-load('results/ho-random-auc-rmspe.rda')
-rownames(auc.ests) <- sp.names
-rownames(rmspe.ests) <- sp.names
-apply(auc.ests, 2, mean)
-apply(rmspe.ests, 2, mean)
-
-
 # Plots of covariate effects ----------------------------------------------
 # Stage 1 -----------------------------
 load("results/stage-1-spatial-2e+05-samples-4-factors-2026-01-09.rda")
@@ -570,43 +640,4 @@ ggsave(file = 'figures/Figure_S22.png', units = 'in', device = 'png',
        height = 8, width = 10)
 
 
-# Model assessment --------------------------------------------------------
-# TODO: change the model you're using here as needed
-load("results/stage-2-spatial-1e+05-samples-4-factors-2026-01-08.rda")
-y.rep.quants <- apply(out$y.rep.samples, c(2, 3), quantile, c(0.025, 0.5, 0.975))
-N <- length(sp.names)
-
-par(mfrow = c(1, 2))
-for (i in 1:N) {
-  keep.indx <- which(data.list.2$y[i, ] != 0)
-  max.val <- max(c(data.list.2$y[i, keep.indx],
-                   y.rep.quants[2, i, keep.indx]))
-  min.val <- min(c(data.list.2$y[i, keep.indx],
-                   y.rep.quants[2, i, keep.indx]))
-  plot(data.list.2$y[i, keep.indx], y.rep.quants[2, i, keep.indx], pch = 19,
-       xlab = 'True', ylab = 'Fitted', main = sp.names[i],
-       ylim = c(min.val, max.val), xlim = c(min.val, max.val))
-  abline(0, 1)
-  hist(data.list.2$y[i, keep.indx], main = sp.names[i])
-  hist(y.rep.quants[2, i, keep.indx], add = TRUE, col = 'red')
-  print(cor(data.list.2$y[i, keep.indx], y.rep.quants[2, i, keep.indx]))
-  Sys.sleep(1)
-}
-
-# A bit of funkiness here, but things generally seem alright. Correlation
-# coefficients from above suggest general good pattern, but that the model
-# tends to underpredict at high values and overpredict at low values.
-resids.2 <- data.list.2$y - y.rep.quants[2, , ]
-par(mfrow = c(1, 3))
-for (i in 1:N) {
-  keep.indx <- which(data.list.2$y[i, ] != 0)
-  plot(y.rep.quants[2, i, keep.indx], resids.2[i, keep.indx], pch = 19,
-       xlab = 'Fitted', ylab = 'Residuals', main = sp.names[i])
-  abline(h = 0, lty = 2, col = 'grey')
-  hist(resids.2[i, keep.indx], main = sp.names[i])
-  qqnorm(resids.2[i, keep.indx], main = sp.names[i])
-  qqline(resids.2[i, keep.indx], main = sp.names[i])
-  Sys.sleep(2)
-}
-par(mfrow = c(1, 1))
 

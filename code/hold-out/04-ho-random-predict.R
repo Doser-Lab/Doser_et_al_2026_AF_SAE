@@ -1,5 +1,6 @@
-# 05-ho-random-predict.R: script to predict presence/absence and biomass at 
+# 04-ho-random-predict.R: script to predict presence/absence and biomass at 
 #                         hold-out locations used in the analysis. 
+# Author: Jeffrey W. Doser
 rm(list = ls())
 library(spOccupancy)
 library(spAbundance)
@@ -77,6 +78,7 @@ X.0.list[[6]] <- X.0
 N <- nrow(data.fit.1$y)
 auc.ests <- matrix(NA, N, n.models)
 rmspe.ests <- matrix(NA, N, n.models)
+cor.ests <- matrix(NA, N, n.models)
 for (l in 1:n.models) {
   # Stage 1 ---------------------------
   load(paste0(out.dir, stage.1.models[l]))
@@ -95,17 +97,21 @@ for (l in 1:n.models) {
   load(paste0(out.dir, stage.2.models[l]))
   out.2 <- out
   rmspe.vals <- matrix(NA, n.samples, N)
+  cor.vals <- matrix(NA, n.samples, N)
   out.pred.2 <- predict(out.2, X.0.list[[l]], coords.0, verbose = FALSE, 
                         z.0.samples = out.pred.1$z.0.samples)
   for (i in 1:N) {
     for (j in 1:n.samples) {
       rmspe.vals[j, i] <- sqrt(mean((data.hold.2$y[i, ] - out.pred.2$y.0.samples[j, i, ])^2))
+      cor.vals[j, i] <- cor(data.hold.2$y[i, ], out.pred.2$y.0.samples[j, i, ])
     }
   }
   rmspe.ests[, l] <- apply(rmspe.vals, 2, mean)
+  cor.ests[, l] <- apply(cor.vals, 2, mean)
 }
 apply(auc.ests, 2, mean)
 apply(rmspe.ests, 2, mean)
+apply(cor.ests, 2, mean)
 
 # Save results to hard drive ----------------------------------------------
-save(auc.ests, rmspe.ests, file = 'results/ho-random-auc-rmspe.rda')
+save(auc.ests, rmspe.ests, cor.ests, file = 'results/ho-random-auc-rmspe.rda')

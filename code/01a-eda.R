@@ -1,4 +1,7 @@
-# 00-eda.R: exploratory data analysis script.
+# 01a-eda.R: this is simply an exploratory script for exploring 
+#            the original, unformatted data set. This was not 
+#            used for any part of the analysis. 
+# Author: Jeffrey W. Doser
 rm(list = ls())
 library(plyr)
 library(tidyverse)
@@ -11,11 +14,7 @@ n_distinct(dat$Plot)
 dat %>%
   filter(Plot == 1)
 
-# OVERALL GOAL: characterize forest structure and composition. Thus, models 
-#               will certainly need to be at the individual species-level.
-
 # Data description --------------------------------------------------------
-# Nasir said that the trees with DBH > 4cm were measured. 
 # Each row corresponds to an overstory tree. 
 # Plot: plot ID, unique for each individual plot.
 # Province: 8 distinct provinces that are unique spatial locations in the 
@@ -34,6 +33,8 @@ dat %>%
 # DBH
 # Height
 # BA
+
+# Basic exploration of the data -------------------------------------------
 
 # Number of trees per plot
 dat %>% 

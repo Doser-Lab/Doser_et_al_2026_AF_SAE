@@ -1,3 +1,4 @@
+ Author: Jeffrey W. Doser
 #!/bin/bash
 #
 # Script:  05a-submit.sh

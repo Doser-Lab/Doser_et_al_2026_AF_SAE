@@ -1,10 +1,14 @@
 # 02d-main-nonspatial-noRE.R: script to fit a basic linear model for 
 #                             small area estimation of basal area across
 #                             eastern Afghanistan. 
+# Author: Jeffrey W. Doser
 rm(list = ls())
 library(spAbundance)
 
 # Directories -------------------------------------------------------------
+# NOTE: this is used to determine the directories for reading in and writing out
+#       data. You should set out.dir and data.dir depending on where you are
+#       running this code.
 # Determine what machine you're on and change directories as needed.
 machine.name <- Sys.info()['nodename']
 if (machine.name == 'pop-os') {

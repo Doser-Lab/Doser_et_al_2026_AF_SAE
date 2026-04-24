@@ -1,5 +1,5 @@
-# 06a-predict.R: script to generate small area estimates across districts in 
-#                Eastern Afghanistan. 
+# 06c-predict.R: script to generate maps of species distributions and 
+#                basal area across eastern Afghanistan.  
 # Author: Jeffrey W. Doser
 rm(list = ls())
 library(spOccupancy)
@@ -8,6 +8,9 @@ library(sf)
 library(stars)
 
 # Directories -------------------------------------------------------------
+# NOTE: this is used to determine the directories for reading in and writing out
+#       data. You should set out.dir and data.dir depending on where you are
+#       running this code.
 # Determine what machine you're on and change directories as needed.
 machine.name <- Sys.info()['nodename']
 if (machine.name == 'pop-os') {

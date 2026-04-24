@@ -1,5 +1,6 @@
-# 1c-get-pred-data.R: extract data for a prediction grid across the 
-#                     study region for use in prediction and map generation.
+# 01e-get-map-pred-data.R: extract data for a prediction grid across the 
+#                          for use in map generation. Note this is not as 
+#                          fine-scale as the grid that is used for prediction. 
 rm(list = ls())
 library(tidyverse)
 library(sf)
@@ -110,13 +111,6 @@ province_num <- case_when(province == 'Kapisa' ~ 1,
                           province == 'Logar' ~ 10, 
                           TRUE ~ NA)
 pred.covs.df$Province_num <- province_num
-
-
-# Remove rows with any NA values ------------------------------------------
-# bad.indx <- which(apply(pred.covs.df, 1, function(a) sum(is.na(a))) > 0)
-# pred.covs.df <- pred.covs.df[-bad.indx, ]
-# coords.pred.mat <- coords.pred.mat[-bad.indx, ]
-# coords.pred.sf <- coords.pred.sf[-bad.indx, ]
 
 # Save to hard drive ------------------------------------------------------
 save(pred.covs.df, coords.pred.mat, coords.pred.sf, 
