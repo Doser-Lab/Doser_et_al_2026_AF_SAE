@@ -27,7 +27,7 @@ ggplot(data = waic.df, aes(x = n.factors, y = waic)) +
   theme_bw(base_size = 16) +
   theme(text = element_text(family="LM Roman 10")) + 
   labs(x = 'Number of spatial factors', y = 'WAIC')
-ggsave(file = 'figures/Figure_S3.png', 
+ggsave(file = 'figures/Figure_S5.png', 
        device = 'png', height = 5, width = 11, units = 'in'  )
 
 # Based on this plot and the number of species, decided to go with 4 spatial factors for 

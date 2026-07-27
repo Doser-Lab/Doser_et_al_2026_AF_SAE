@@ -203,7 +203,7 @@ beta.df %>%
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         axis.text.y = element_text(size = 12))
-ggsave(file = 'figures/Figure_S20.png', units = 'in', device = 'png',
+ggsave(file = 'figures/Figure_S21.png', units = 'in', device = 'png',
        height = 4, width = 7)
 
 # Model predictive performance --------------------------------------------

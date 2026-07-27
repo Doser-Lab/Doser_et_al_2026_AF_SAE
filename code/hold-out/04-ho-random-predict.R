@@ -20,8 +20,8 @@ if (machine.name == 'pop-os') {
   out.dir <- 'results/'
   data.dir <- 'data/'
 } else { # Running on NCSU HPC
-  out.dir <- '/share/doserlab/jwdoser/DSKW24/results/'
-  data.dir <- '/share/doserlab/jwdoser/DSKW24/data/'
+  out.dir <- '/share/doserlab/jwdoser/DSKW25/results/'
+  data.dir <- '/share/doserlab/jwdoser/DSKW25/data/'
 }
 
 # Functions and CRS -------------------------------------------------------
@@ -76,6 +76,10 @@ X.0.list[[6]] <- X.0
 # Do the prediction -------------------------------------------------------
 # Do the prediction for all models, one by one.
 N <- nrow(data.fit.1$y)
+tp.ests <- matrix(NA, N, n.models)
+tn.ests <- matrix(NA, N, n.models)
+fp.ests <- matrix(NA, N, n.models)
+fn.ests <- matrix(NA, N, n.models)
 auc.ests <- matrix(NA, N, n.models)
 rmspe.ests <- matrix(NA, N, n.models)
 cor.ests <- matrix(NA, N, n.models)
@@ -85,14 +89,30 @@ for (l in 1:n.models) {
   out.1 <- out
   n.samples <- out.1$n.post * out.1$n.chains
   auc.vals <- matrix(NA, n.samples, N)
+  tp.vals <- matrix(NA, n.samples, N)
+  tn.vals <- matrix(NA, n.samples, N)
+  fp.vals <- matrix(NA, n.samples, N)
+  fn.vals <- matrix(NA, n.samples, N)
   out.pred.1 <- predict(out.1, X.0.list[[l]], coords.0, verbose = FALSE) 
   for (i in 1:N) {
     for (j in 1:n.samples) {
       auc.vals[j, i] <- auc(response = data.hold.1$y[i, ],
-		  	  predictor = out.pred.1$z.0.samples[j, i, ])
+                            predictor = out.pred.1$z.0.samples[j, i, ])
+      tp.vals[j, i] <- sum((c(data.hold.1$y[i, ]) == 1) & (c(out.pred.1$z.0.samples[j, i, ]) == 1), 
+                           na.rm = TRUE)
+      tn.vals[j, i] <- sum((c(data.hold.1$y[i, ]) == 0) & (c(out.pred.1$z.0.samples[j, i, ]) == 0), 
+                           na.rm = TRUE)
+      fn.vals[j, i] <- sum((c(data.hold.1$y[i, ]) == 1) & (c(out.pred.1$z.0.samples[j, i, ]) == 0), 
+                           na.rm = TRUE)
+      fp.vals[j, i] <- sum((c(data.hold.1$y[i, ]) == 0) & (c(out.pred.1$z.0.samples[j, i, ]) == 1), 
+                           na.rm = TRUE)
     }
   }
   auc.ests[, l] <- apply(auc.vals, 2, mean)
+  tp.ests[, l] <- apply(tp.vals, 2, mean)
+  tn.ests[, l] <- apply(tn.vals, 2, mean)
+  fn.ests[, l] <- apply(fn.vals, 2, mean)
+  fp.ests[, l] <- apply(fp.vals, 2, mean)
   # Stage 2 ---------------------------
   load(paste0(out.dir, stage.2.models[l]))
   out.2 <- out
@@ -110,8 +130,13 @@ for (l in 1:n.models) {
   cor.ests[, l] <- apply(cor.vals, 2, mean)
 }
 apply(auc.ests, 2, mean)
+apply(tp.ests, 2, mean)
+apply(tn.ests, 2, mean)
+apply(fp.ests, 2, mean)
+apply(fn.ests, 2, mean)
 apply(rmspe.ests, 2, mean)
 apply(cor.ests, 2, mean)
 
 # Save results to hard drive ----------------------------------------------
-save(auc.ests, rmspe.ests, cor.ests, file = 'results/ho-random-auc-rmspe.rda')
+save(auc.ests, tp.ests, tn.ests, fp.ests, fn.ests, rmspe.ests, 
+     cor.ests, file = 'results/ho-random-auc-rmspe.rda')
