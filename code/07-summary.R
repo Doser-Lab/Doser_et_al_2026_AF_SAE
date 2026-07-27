@@ -14,11 +14,12 @@ library(clinUtils)
 # For scale_color_colorblind
 library(ggthemes)
 library(ggspatial)
+# For semivariogram
+library(geoR)
 
 # Load in data and prediction data ----------------------------------------
 load('data/spOccupancy_data.rda')
 load('data/spAbundance_data.rda')
-load('data/prediction_data.rda')
 my.crs <- 32642
 coords.sf <- st_as_sf(as.data.frame(data.list.1$coords), 
                       coords = c('X', 'Y'), 
@@ -56,8 +57,13 @@ sp.names <- dimnames(data.list.1$y)[[1]]
 
 # Calculate basic summary statistics --------------------------------------
 true.ba <- ifelse(data.list.2$y == 0, 0, exp(data.list.2$y))
+# Averages by species
 apply(true.ba, 1, mean)
-sort(sp.names)
+# Ranges by species
+apply(true.ba, 1, sd)
+# Number of plots where each species occurs
+apply(true.ba, 1, function(a) sum(a > 0))
+sd(apply(true.ba, 2, sum))
 raw.tree.dat <- read.csv("data/individual_tree_data.csv")
 # Filter raw tree data to only use the data from the plots included in the model.
 raw.tree.dat <- raw.tree.dat %>%
@@ -65,6 +71,36 @@ raw.tree.dat <- raw.tree.dat %>%
 
 apply(true.ba, 1, mean)
 table(raw.tree.dat$Overstory)
+
+# Visualization of plot distances -----------------------------------------
+dist_vals <- dist(data.list.1$coords)
+
+plot_df <- data.frame(dists = dist_vals)
+
+ggplot(plot_df, aes(dists / 1000)) +
+  stat_ecdf(geom = "step") +
+  labs(x = "Distance (km)", y = "Cumulative Probability") +
+  theme_bw(base_size = 14) +
+  theme(text = element_text(family="LM Roman 10"))
+ggsave(file = 'figures/Figure_S3.png', height = 6, width = 8, units = 'in')
+
+# Empirical variogram of total BA data ------------------------------------
+load("data/ba_spAbundance_data.rda")
+# Define the distances used to calculate the empirical variogram
+max.dist <- quantile(dist_vals, 0.75)
+bins <- 20
+ba.variog <- variog(coords = data.list$coords, data = data.list$y,
+                     uvec = seq(0, max.dist, length = bins))
+plot.df <- data.frame(distance = ba.variog$u,
+                      ba = ba.variog$v)
+ba.vario.plot <- ggplot(data = plot.df, aes(x = distance / 1000, y = ba)) +
+  geom_point() +
+  scale_y_continuous(limits = c(0, max(plot.df$ba))) +
+  theme_bw(base_size = 14) +
+  theme(text = element_text(family="LM Roman 10")) + 
+  labs(x = "Distance (km)", y = 'Semivariance')
+
+ggsave(file = 'figures/Figure_S4.png', height = 6, width = 8, units = 'in')
 
 
 # EDA histogram of BA values ----------------------------------------------
@@ -189,6 +225,10 @@ load('results/ho-random-auc-rmspe.rda')
 rownames(auc.ests) <- sp.names
 rownames(rmspe.ests) <- sp.names
 rownames(cor.ests) <- sp.names
+rownames(tp.ests) <- sp.names
+rownames(tn.ests) <- sp.names
+rownames(fp.ests) <- sp.names
+rownames(fn.ests) <- sp.names
 # Note that AUC estimates are pretty solid across species, with the exception 
 # of Abies spectabilis, whose value is only at 0.62. This is not particularly 
 # suprising as this is the rarest species included in the data set. 
@@ -200,6 +240,20 @@ apply(rmspe.ests, 2, mean)
 # spectabilis (the rarest species), as well as Juniperus semiglobosa. 
 apply(cor.ests, 2, mean)
 cor.ests
+
+# Check some additional metrics for the Stage 1 classification model
+accuracy.ests <- (tp.ests + tn.ests) / (tp.ests + tn.ests + fp.ests + fn.ests)
+# Accuracy is not great, due to the large unbalanced nature of the data set, so it 
+# makes it seem that model performance is exceptional for the very rare species. 
+accuracy.ests
+# Calculate precision and recall. 
+precision.ests <- tp.ests / (tp.ests + fp.ests)
+recall.ests <- tp.ests / (tp.ests + fn.ests)
+apply(precision.ests, 2, mean)
+apply(recall.ests, 2, mean)
+
+precision.ests
+recall.ests
 
 # For context, this is the number of plots for each species where there is non-zero
 # basal area. In other words, it's the number of plots used for that species
@@ -310,6 +364,8 @@ for (i in 1:N) {
   #       Could change the proportion you use if you want. 
   plot.sf <- plot.sf %>%
     filter(prop.forest.dist >= .03)
+  tmp <- st_area(plot.sf)
+  plot(tmp, plot.sf$med, pch = 19)
   mean.plot <- ggplot() +
     geom_sf(data = af.district, fill = 'white') + 
     geom_sf(data = plot.sf, aes(fill = med)) +
@@ -592,7 +648,7 @@ beta.df %>%
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         axis.text.y = element_text(size = 12))
-ggsave(file = 'figures/Figure_S21.png', units = 'in', device = 'png',
+ggsave(file = 'figures/Figure_S22.png', units = 'in', device = 'png',
        height = 8, width = 10)
 
 
@@ -636,7 +692,7 @@ beta.df %>%
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         axis.text.y = element_text(size = 12))
-ggsave(file = 'figures/Figure_S22.png', units = 'in', device = 'png',
+ggsave(file = 'figures/Figure_S23.png', units = 'in', device = 'png',
        height = 8, width = 10)
 
 
